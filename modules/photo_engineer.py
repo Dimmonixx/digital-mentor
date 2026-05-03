@@ -121,7 +121,7 @@ def show_page():
                                  "D2","D3","D4"]
                 target_shade = st.selectbox("Заказанный оттенок", shade_options)
 
-                api_key = st.session_state.get("openai_api_key", "")
+                api_key = st.session_state.get("deepseek_api_key", "")
                 if api_key:
                     if st.button("Получить AI-рекомендации"):
                         with st.spinner("AI анализирует коронку..."):
@@ -139,7 +139,7 @@ def show_page():
                     if st.session_state.get("ai_result"):
                         st.markdown(st.session_state["ai_result"])
                 else:
-                    st.warning("Перейди в ⚙️ Настройки и введи OpenAI API ключ")
+                    st.warning("Перейди в ⚙️ Настройки и введи DeepSeek API ключ")
 
         elif not grey:
             st.info("Загрузи фото с серой картой — Шаг 1")

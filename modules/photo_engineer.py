@@ -99,12 +99,9 @@ def show_page():
                 st.divider()
                 st.subheader("AI-анализ коронки")
 
-                api_key = st.text_input(
-                    "Введи OpenAI API ключ",
-                    type="password",
-                    placeholder="sk-...",
-                    key="openai_key"
-                )
+                api_key = st.session_state.get("openai_api_key", "")
+                if not api_key:
+                    st.warning("API ключ не найден. Перейди в ⚙️ Настройки и введи OpenAI API ключ.")
 
                 shade_options = ["Не указан","A1","A2","A3","A3.5","A4",
                                  "B1","B2","B3","B4","C1","C2","C3","C4","D2","D3","D4"]

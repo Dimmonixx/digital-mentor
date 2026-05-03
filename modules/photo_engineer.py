@@ -1,6 +1,7 @@
 import streamlit as st
 import numpy as np
 from PIL import Image
+from modules import ai_analysis
 
 def show_page():
     st.title("Фото-инженер")
@@ -94,6 +95,33 @@ def show_page():
                     st.warning("Допустимое отклонение — результат приемлем")
                 else:
                     st.error("Сильный цветовой сдвиг — проверь освещение")
+
+                st.divider()
+                st.subheader("AI-анализ коронки")
+
+                api_key = st.text_input(
+                    "Введи OpenAI API ключ",
+                    type="password",
+                    placeholder="sk-...",
+                    key="openai_key"
+                )
+
+                shade_options = ["Не указан","A1","A2","A3","A3.5","A4",
+                                 "B1","B2","B3","B4","C1","C2","C3","C4","D2","D3","D4"]
+                target_shade = st.selectbox("Заказанный оттенок", shade_options)
+
+                if api_key:
+                    if st.button("Получить AI-рекомендации"):
+                        with st.spinner("AI анализирует коронку..."):
+                            try:
+                                shade = None if target_shade == "Не указан" else target_shade
+                                result = ai_analysis.analyze_crown(crown, api_key, shade)
+                                st.success("Анализ готов!")
+                                st.markdown(result)
+                            except Exception as e:
+                                st.error(f"Ошибка: {str(e)}")
+                else:
+                    st.info("Введи OpenAI API ключ для получения AI-рекомендаций")
 
         elif grey and not crown:
             st.info("Загрузи фото коронки для применения коррекции")

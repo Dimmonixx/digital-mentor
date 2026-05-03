@@ -93,9 +93,8 @@ if st.session_state["page"] == "🏠 Главная":
             st.session_state["page"] = "💬 Чат техников"
             st.rerun()
 
-elif st.session_state["page"] == "📷 Фото-инженер":
-    st.title("📷 Фото-инженер")
-    st.info("Раздел в разработке — скоро здесь появится функционал")
+elif page == "📷 Фото-инженер":
+    photo_engineer.show_page()
 
 elif st.session_state["page"] == "🔍 Детекция дефектов":
     st.title("🔍 Детекция дефектов")

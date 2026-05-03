@@ -1,4 +1,5 @@
 import streamlit as st
+from modules import photo_engineer
 
 st.set_page_config(page_title="Цифровой Наставник", layout="wide")
 

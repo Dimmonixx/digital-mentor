@@ -4,7 +4,7 @@ from PIL import Image
 
 def show_page():
     st.title("Фото-инженер")
-    st.info("Модуль анализирует фото и корректирует цвет для точного подбора оттенка. Два режима: серая карта (профессиональный) и расцветка Vita (быстрый).")
+    st.info("Модуль анализирует фото и корректирует цвет. Два режима: серая карта и расцветка Vita.")
 
     режим = st.radio(
         "Выбери режим калибровки",
@@ -22,8 +22,10 @@ def show_page():
         3. Загрузи фото ниже
         """)
         st.divider()
+
         col1, col2 = st.columns(2)
-       with col1:
+
+        with col1:
             st.subheader("Шаг 1 — Серая карта")
             grey = st.camera_input("Сфотографировать", key="cam_grey")
             if not grey:
@@ -32,6 +34,7 @@ def show_page():
                                         key="grey_card")
             if grey:
                 st.image(grey, use_container_width=True)
+
         with col2:
             st.subheader("Шаг 2 — Коронка")
             crown = st.camera_input("Сфотографировать", key="cam_crown")
@@ -69,6 +72,7 @@ def show_page():
 
                 st.divider()
                 st.subheader("Результат калибровки")
+
                 col_r, col_g, col_b = st.columns(3)
                 col_r.metric("R gain", f"{gain_r:.3f}")
                 col_g.metric("G gain", f"{gain_g:.3f}")
@@ -104,9 +108,13 @@ def show_page():
         3. Избегай теней и бликов на расцветке
         """)
         st.divider()
-        vita = st.file_uploader("Фото коронки с расцветкой Vita",
-                                type=["jpg","jpeg","png"],
-                                key="vita")
+
+        vita = st.camera_input("Сфотографировать", key="cam_vita")
+        if not vita:
+            vita = st.file_uploader("Или загрузить из галереи",
+                                    type=["jpg","jpeg","png"],
+                                    key="vita")
+
         st.selectbox(
             "Предполагаемый оттенок (для сравнения)",
             ["A1","A2","A3","A3.5","A4",
@@ -114,6 +122,7 @@ def show_page():
              "C1","C2","C3","C4",
              "D2","D3","D4"]
         )
+
         if vita:
             st.image(vita, use_container_width=True)
 

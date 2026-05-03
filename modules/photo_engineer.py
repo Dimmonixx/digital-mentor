@@ -1,6 +1,7 @@
 import streamlit as st
 import numpy as np
 from PIL import Image
+import io
 from modules import ai_analysis
 
 def show_page():
@@ -34,7 +35,9 @@ def show_page():
                                         type=["jpg","jpeg","png"],
                                         key="grey_card")
             if grey:
-                st.image(grey, use_container_width=True)
+                st.session_state["grey_img"] = grey
+            if st.session_state.get("grey_img"):
+                st.image(st.session_state["grey_img"], use_container_width=True)
 
         with col2:
             st.subheader("Шаг 2 — Коронка")
@@ -44,7 +47,12 @@ def show_page():
                                          type=["jpg","jpeg","png"],
                                          key="crown_grey")
             if crown:
-                st.image(crown, use_container_width=True)
+                st.session_state["crown_img"] = crown
+            if st.session_state.get("crown_img"):
+                st.image(st.session_state["crown_img"], use_container_width=True)
+
+        grey = st.session_state.get("grey_img")
+        crown = st.session_state.get("crown_img")
 
         if grey and crown:
             if st.button("Анализировать баланс белого"):
@@ -71,27 +79,36 @@ def show_page():
                 corrected[:,:,2] = np.clip(corrected[:,:,2] * gain_b, 0, 255)
                 corrected = corrected.astype(np.uint8)
 
+                st.session_state["wb_result"] = {
+                    "gain_r": gain_r,
+                    "gain_g": gain_g,
+                    "gain_b": gain_b,
+                    "corrected": corrected,
+                    "original": img_crown,
+                    "deviation": np.std([mean_r, mean_g, mean_b])
+                }
+
+            if st.session_state.get("wb_result"):
+                res = st.session_state["wb_result"]
                 st.divider()
                 st.subheader("Результат калибровки")
 
                 col_r, col_g, col_b = st.columns(3)
-                col_r.metric("R gain", f"{gain_r:.3f}")
-                col_g.metric("G gain", f"{gain_g:.3f}")
-                col_b.metric("B gain", f"{gain_b:.3f}")
+                col_r.metric("R gain", f"{res['gain_r']:.3f}")
+                col_g.metric("G gain", f"{res['gain_g']:.3f}")
+                col_b.metric("B gain", f"{res['gain_b']:.3f}")
 
-                st.divider()
                 col_before, col_after = st.columns(2)
                 with col_before:
                     st.caption("До коррекции")
-                    st.image(img_crown, use_container_width=True)
+                    st.image(res["original"], use_container_width=True)
                 with col_after:
                     st.caption("После коррекции")
-                    st.image(corrected, use_container_width=True)
+                    st.image(res["corrected"], use_container_width=True)
 
-                deviation = np.std([mean_r, mean_g, mean_b])
-                if deviation < 5:
+                if res["deviation"] < 5:
                     st.success("Отличная калибровка — серая карта нейтральна")
-                elif deviation < 15:
+                elif res["deviation"] < 15:
                     st.warning("Допустимое отклонение — результат приемлем")
                 else:
                     st.error("Сильный цветовой сдвиг — проверь освещение")
@@ -99,31 +116,35 @@ def show_page():
                 st.divider()
                 st.subheader("AI-анализ коронки")
 
-                api_key = st.session_state.get("openai_api_key", "")
-                if not api_key:
-                    st.warning("API ключ не найден. Перейди в ⚙️ Настройки и введи OpenAI API ключ.")
-
                 shade_options = ["Не указан","A1","A2","A3","A3.5","A4",
-                                 "B1","B2","B3","B4","C1","C2","C3","C4","D2","D3","D4"]
+                                 "B1","B2","B3","B4","C1","C2","C3","C4",
+                                 "D2","D3","D4"]
                 target_shade = st.selectbox("Заказанный оттенок", shade_options)
 
+                api_key = st.session_state.get("openai_api_key", "")
                 if api_key:
                     if st.button("Получить AI-рекомендации"):
                         with st.spinner("AI анализирует коронку..."):
                             try:
                                 shade = None if target_shade == "Не указан" else target_shade
-                                result = ai_analysis.analyze_crown(crown, api_key, shade)
-                                st.success("Анализ готов!")
-                                st.markdown(result)
+                                result = ai_analysis.analyze_crown(
+                                    st.session_state["crown_img"],
+                                    api_key,
+                                    shade
+                                )
+                                st.session_state["ai_result"] = result
                             except Exception as e:
                                 st.error(f"Ошибка: {str(e)}")
-                else:
-                    st.info("Введи OpenAI API ключ для получения AI-рекомендаций")
 
-        elif grey and not crown:
-            st.info("Загрузи фото коронки для применения коррекции")
-        elif crown and not grey:
-            st.info("Загрузи фото с серой картой для калибровки")
+                    if st.session_state.get("ai_result"):
+                        st.markdown(st.session_state["ai_result"])
+                else:
+                    st.warning("Перейди в ⚙️ Настройки и введи OpenAI API ключ")
+
+        elif not grey:
+            st.info("Загрузи фото с серой картой — Шаг 1")
+        elif not crown:
+            st.info("Загрузи фото коронки — Шаг 2")
 
     else:
         st.subheader("Инструкция")
@@ -139,6 +160,10 @@ def show_page():
             vita = st.file_uploader("Или загрузить из галереи",
                                     type=["jpg","jpeg","png"],
                                     key="vita")
+        if vita:
+            st.session_state["vita_img"] = vita
+        if st.session_state.get("vita_img"):
+            st.image(st.session_state["vita_img"], use_container_width=True)
 
         st.selectbox(
             "Предполагаемый оттенок (для сравнения)",
@@ -147,9 +172,6 @@ def show_page():
              "C1","C2","C3","C4",
              "D2","D3","D4"]
         )
-
-        if vita:
-            st.image(vita, use_container_width=True)
 
         if st.button("Сравнить с расцветкой"):
             st.info("Алгоритм сравнения подключим на следующем шаге")

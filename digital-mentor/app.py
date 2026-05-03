@@ -1,7 +1,12 @@
+# -*- coding: utf-8 -*-
 import streamlit as st
 from modules import photo_engineer
 
-st.set_page_config(page_title="Цифровой Наставник", page_icon="🦷", layout="wide")
+st.set_page_config(
+    page_title="Цифровой Наставник",
+    page_icon="🦷",
+    layout="wide"
+)
 
 with st.sidebar:
     st.title("🦷 Цифровой Наставник")
@@ -27,33 +32,25 @@ if page == "🏠 Главная":
     st.subheader("Анализ и инструменты")
     col1, col2, col3 = st.columns(3)
     with col1:
-        if st.button("📷 Фото-инженер", use_container_width=True):
-            st.session_state["page"] = "📷 Фото-инженер"
+        st.button("📷 Фото-инженер", use_container_width=True)
     with col2:
-        if st.button("🔍 Дефекты", use_container_width=True):
-            st.session_state["page"] = "🔍 Детекция дефектов"
+        st.button("🔍 Дефекты", use_container_width=True)
     with col3:
-        if st.button("🎨 Колористика", use_container_width=True):
-            st.session_state["page"] = "🎨 Колористика"
+        st.button("🎨 Колористика", use_container_width=True)
     col4, col5, col6 = st.columns(3)
     with col4:
-        if st.button("📋 Тех-карта", use_container_width=True):
-            st.session_state["page"] = "📋 Тех-карта"
+        st.button("📋 Тех-карта", use_container_width=True)
     with col5:
-        if st.button("🔬 Морфология", use_container_width=True):
-            st.session_state["page"] = "🔬 Морфология"
+        st.button("🔬 Морфология", use_container_width=True)
     with col6:
-        if st.button("📁 Кейсы", use_container_width=True):
-            st.session_state["page"] = "📁 Кейсы"
+        st.button("📁 Кейсы", use_container_width=True)
     st.divider()
     st.subheader("Обучение и сообщество")
     col7, col8 = st.columns(2)
     with col7:
-        if st.button("🦴 Анатомия зубов", use_container_width=True):
-            st.session_state["page"] = "🦴 Анатомия зубов"
+        st.button("🦴 Анатомия зубов", use_container_width=True)
     with col8:
-        if st.button("💬 Чат техников", use_container_width=True):
-            st.session_state["page"] = "💬 Чат техников"
+        st.button("💬 Чат техников", use_container_width=True)
 
 elif page == "📷 Фото-инженер":
     photo_engineer.show_page()

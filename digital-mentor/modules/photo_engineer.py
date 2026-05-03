@@ -25,16 +25,20 @@ def show_page():
         col1, col2 = st.columns(2)
         with col1:
             st.subheader("Шаг 1 — Серая карта")
-            grey = st.file_uploader("Фото с серой картой",
-                                    type=["jpg","jpeg","png"],
-                                    key="grey_card")
+            grey = st.camera_input("Сфотографировать", key="cam_grey")
+            if not grey:
+                grey = st.file_uploader("Или загрузить из галереи",
+                                        type=["jpg","jpeg","png"],
+                                        key="grey_card")
             if grey:
                 st.image(grey, use_container_width=True)
         with col2:
             st.subheader("Шаг 2 — Коронка")
-            crown = st.file_uploader("Фото коронки",
-                                     type=["jpg","jpeg","png"],
-                                     key="crown_grey")
+            crown = st.camera_input("Сфотографировать", key="cam_crown")
+            if not crown:
+                crown = st.file_uploader("Или загрузить из галереи",
+                                         type=["jpg","jpeg","png"],
+                                         key="crown_grey")
             if crown:
                 st.image(crown, use_container_width=True)
 

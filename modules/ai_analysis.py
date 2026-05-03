@@ -1,8 +1,8 @@
 import streamlit as st
-import base64
-from openai import OpenAI
 from PIL import Image
+import base64
 import io
+import requests
 
 def image_to_base64(image_file):
     img = Image.open(image_file).convert("RGB")
@@ -11,41 +11,33 @@ def image_to_base64(image_file):
     return base64.b64encode(buffer.getvalue()).decode("utf-8")
 
 def analyze_crown(image_file, api_key, shade=None):
-    client = OpenAI(api_key=api_key)
-    
     img_base64 = image_to_base64(image_file)
-    
-    shade_text = f"Заказанный оттенок: {shade}." if shade else ""
-    
-    prompt = f"""You are a professional dental ceramist assistant helping analyze crown photos.
 
-Please analyze this dental crown photo and provide recommendations in Russian language.
+    shade_text = f"Target Vita shade: {shade}." if shade else ""
 
-{f"Target Vita shade: {shade}" if shade else ""}
+    prompt = f"""You are a professional dental ceramist assistant.
+Analyze this dental crown photo and provide recommendations in Russian.
 
-Provide analysis in this exact format:
+{shade_text}
 
-1. ТЕКУЩИЙ ОТТЕНОК:
-   - Оттенок по Vita шкале
-   - Цервикальная зона (насыщенность)
-   - Средняя треть (мамелоны, опал-эффект)
-   - Режущий край (прозрачность)
+1. ТЕКУЩИЙ ОТТЕНОК по Vita шкале
+2. Цервикальная зона, средняя треть, режущий край
+3. ОТКЛОНЕНИЯ от заказанного оттенка
+4. КОНКРЕТНЫЙ ПЛАН ДОРАБОТКИ:
+   - материал и куда наносить
+   - толщина слоя
+   - температура обжига
 
-2. ОТКЛОНЕНИЯ:
-   - Что именно отличается от заказанного оттенка
-   - Насколько критично
+Отвечай на русском. Конкретно и профессионально."""
 
-3. ПЛАН ДОРАБОТКИ (конкретные шаги):
-   - Какой материал нанести и куда
-   - Толщина слоя
-   - Температура обжига
-   - Контроль результата
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
 
-Answer only in Russian. Be specific and professional."""
-
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
+    payload = {
+        "model": "deepseek-chat",
+        "messages": [
             {
                 "role": "user",
                 "content": [
@@ -62,7 +54,16 @@ Answer only in Russian. Be specific and professional."""
                 ]
             }
         ],
-        max_tokens=1000
+        "max_tokens": 1000
+    }
+
+    response = requests.post(
+        "https://api.deepseek.com/chat/completions",
+        headers=headers,
+        json=payload
     )
-    
-    return response.choices[0].message.content
+
+    if response.status_code == 200:
+        return response.json()["choices"][0]["message"]["content"]
+    else:
+        raise Exception(f"DeepSeek ошибка {response.status_code}: {response.text}")

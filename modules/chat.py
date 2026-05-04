@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 from modules import ai_analysis
 
-FIREBASE_URL = "https://digital-mentor-98da3-default-rtdb.firebaseio.com"
+FIREBASE_URL = "https://digital-mentor-98da3-default-rtdb.europe-west1.firebasedatabase.app"
 
 def get_messages():
     try:

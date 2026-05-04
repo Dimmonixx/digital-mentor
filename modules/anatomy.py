@@ -234,6 +234,8 @@ def show_opal():
     оптических свойств зуба для воссоздания в керамике.
     """)
 
+    st.image(os.path.join(BASE_DIR, "assets", "opal.png"), use_container_width=True)
+
     col1, col2 = st.columns(2)
 
     with col1:

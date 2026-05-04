@@ -86,6 +86,8 @@ def show_zones():
     Каждая зона имеет свои пропорции, оттенок и прозрачность.
     """)
 
+    st.image("assets/zones.png", use_container_width=True)
+
     col1, col2, col3 = st.columns(3)
 
     with col1:

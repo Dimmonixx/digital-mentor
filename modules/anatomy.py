@@ -1,5 +1,7 @@
 import streamlit as st
 import base64
+import os
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def show_page():
     st.title("🦴 Анатомия зубов")
@@ -38,7 +40,7 @@ def show_tooth_structure():
     и требует особого подхода при изготовлении керамики.
     """)
 
-    st.image("assets/tooth_anatomy.png", use_container_width=True)
+    st.image(os.path.join(BASE_DIR, "assets", "tooth_anatomy.png"), use_container_width=True)
 
     col1, col2 = st.columns(2)
 
@@ -86,7 +88,7 @@ def show_zones():
     Каждая зона имеет свои пропорции, оттенок и прозрачность.
     """)
 
-    st.image("assets/zones.png", use_container_width=True)
+    st.image(os.path.join(BASE_DIR, "assets", "zones.png"), use_container_width=True)
 
     col1, col2, col3 = st.columns(3)
 

@@ -194,6 +194,8 @@ def show_occlusal():
     Помогает правильно расставить бугры и фиссуры.
     """)
 
+    st.image(os.path.join(BASE_DIR, "assets", "occlusal.png"), use_container_width=True)
+
     col1, col2 = st.columns(2)
 
     with col1:

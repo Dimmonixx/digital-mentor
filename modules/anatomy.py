@@ -148,6 +148,8 @@ def show_mamelons():
     вид и глубину режущей зоны.
     """)
 
+    st.image(os.path.join(BASE_DIR, "assets", "mamelons.png"), use_container_width=True)
+
     col1, col2 = st.columns(2)
 
     with col1:

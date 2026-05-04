@@ -1,4 +1,5 @@
 import streamlit as st
+import base64
 
 def show_page():
     st.title("🦴 Анатомия зубов")
@@ -37,46 +38,36 @@ def show_tooth_structure():
     и требует особого подхода при изготовлении керамики.
     """)
 
-    st.markdown("""
-<svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg" 
-     style="width:100%; max-width:300px; display:block; margin:0 auto;">
-  
-  <!-- Режущая треть - эмаль -->
-  <ellipse cx="150" cy="80" rx="60" ry="70" fill="#F0EFE8" stroke="#ccc" stroke-width="1"/>
-  
-  <!-- Средняя треть -->
-  <rect x="90" y="130" width="120" height="100" fill="#E8E4D8" stroke="#ccc" stroke-width="1"/>
-  
-  <!-- Цервикальная треть -->
-  <path d="M90,230 Q85,290 100,320 Q150,350 200,320 Q215,290 210,230 Z" 
-        fill="#DDD5C0" stroke="#ccc" stroke-width="1"/>
-  
-  <!-- Дентин внутри -->
-  <ellipse cx="150" cy="100" rx="35" ry="45" fill="#E8C88A" opacity="0.6"/>
-  <rect x="115" y="140" width="70" height="80" fill="#E8C88A" opacity="0.6"/>
-  
-  <!-- Мамелоны -->
-  <ellipse cx="130" cy="75" rx="12" ry="18" fill="#E8E0D0" stroke="#bbb" stroke-width="1"/>
-  <ellipse cx="150" cy="68" rx="12" ry="22" fill="#E8E0D0" stroke="#bbb" stroke-width="1"/>
-  <ellipse cx="170" cy="75" rx="12" ry="18" fill="#E8E0D0" stroke="#bbb" stroke-width="1"/>
-  
-  <!-- Подписи зон -->
-  <line x1="220" y1="80" x2="260" y2="80" stroke="#4A90D9" stroke-width="1.5"/>
-  <text x="262" y="84" font-size="11" fill="#4A90D9">Режущая 1/3</text>
-  
-  <line x1="220" y1="180" x2="260" y2="180" stroke="#7B68EE" stroke-width="1.5"/>
-  <text x="262" y="184" font-size="11" fill="#7B68EE">Средняя 1/3</text>
-  
-  <line x1="220" y1="280" x2="260" y2="280" stroke="#E8943A" stroke-width="1.5"/>
-  <text x="262" y="284" font-size="11" fill="#E8943A">Цервикальная</text>
-  
-  <!-- Корень -->
-  <path d="M120,320 Q110,360 150,390 Q190,360 180,320 Z" 
+    svg_code = """
+<svg viewBox="0 0 400 420" xmlns="http://www.w3.org/2000/svg">
+  <rect x="90" y="60" width="120" height="60" rx="40" 
+        fill="#F0EFE8" stroke="#bbb" stroke-width="1.5"/>
+  <ellipse cx="130" cy="65" rx="13" ry="20" fill="#E8E0D0" stroke="#bbb" stroke-width="1"/>
+  <ellipse cx="150" cy="58" rx="13" ry="24" fill="#E8E0D0" stroke="#bbb" stroke-width="1"/>
+  <ellipse cx="170" cy="65" rx="13" ry="20" fill="#E8E0D0" stroke="#bbb" stroke-width="1"/>
+  <rect x="90" y="118" width="120" height="100" fill="#E8E4D8" stroke="#bbb" stroke-width="1.5"/>
+  <rect x="95" y="123" width="50" height="85" fill="#E8C88A" opacity="0.5"/>
+  <path d="M90,218 Q85,290 110,330 Q150,355 190,330 Q215,290 210,218 Z"
+        fill="#DDD5C0" stroke="#bbb" stroke-width="1.5"/>
+  <path d="M110,330 Q120,375 150,395 Q180,375 190,330 Z"
         fill="#C8B89A" stroke="#aaa" stroke-width="1"/>
-  <text x="155" y="365" font-size="10" fill="#888">Корень</text>
-
+  <line x1="220" y1="75" x2="270" y2="75" stroke="#4A90D9" stroke-width="1.5"/>
+  <text x="272" y="79" font-size="12" fill="#4A90D9" font-family="Arial">Режущая 1/3</text>
+  <line x1="220" y1="168" x2="270" y2="168" stroke="#7B68EE" stroke-width="1.5"/>
+  <text x="272" y="172" font-size="12" fill="#7B68EE" font-family="Arial">Средняя 1/3</text>
+  <line x1="220" y1="265" x2="270" y2="265" stroke="#E8943A" stroke-width="1.5"/>
+  <text x="272" y="269" font-size="12" fill="#E8943A" font-family="Arial">Цервикальная</text>
+  <line x1="220" y1="360" x2="270" y2="360" stroke="#888" stroke-width="1.5"/>
+  <text x="272" y="364" font-size="12" fill="#888" font-family="Arial">Корень</text>
 </svg>
-""", unsafe_allow_html=True)
+"""
+
+    b64 = base64.b64encode(svg_code.encode("utf-8")).decode("utf-8")
+    st.markdown(
+        f'<img src="data:image/svg+xml;base64,{b64}" '
+        f'style="width:100%;max-width:350px;display:block;margin:0 auto 20px;"/>',
+        unsafe_allow_html=True
+    )
 
     col1, col2 = st.columns(2)
 

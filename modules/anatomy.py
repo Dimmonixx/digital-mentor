@@ -39,26 +39,74 @@ def show_tooth_structure():
     """)
 
     svg_code = """
-<svg viewBox="0 0 400 420" xmlns="http://www.w3.org/2000/svg">
-  <rect x="90" y="60" width="120" height="60" rx="40" 
-        fill="#F0EFE8" stroke="#bbb" stroke-width="1.5"/>
-  <ellipse cx="130" cy="65" rx="13" ry="20" fill="#E8E0D0" stroke="#bbb" stroke-width="1"/>
-  <ellipse cx="150" cy="58" rx="13" ry="24" fill="#E8E0D0" stroke="#bbb" stroke-width="1"/>
-  <ellipse cx="170" cy="65" rx="13" ry="20" fill="#E8E0D0" stroke="#bbb" stroke-width="1"/>
-  <rect x="90" y="118" width="120" height="100" fill="#E8E4D8" stroke="#bbb" stroke-width="1.5"/>
-  <rect x="95" y="123" width="50" height="85" fill="#E8C88A" opacity="0.5"/>
-  <path d="M90,218 Q85,290 110,330 Q150,355 190,330 Q215,290 210,218 Z"
-        fill="#DDD5C0" stroke="#bbb" stroke-width="1.5"/>
-  <path d="M110,330 Q120,375 150,395 Q180,375 190,330 Z"
-        fill="#C8B89A" stroke="#aaa" stroke-width="1"/>
-  <line x1="220" y1="75" x2="270" y2="75" stroke="#4A90D9" stroke-width="1.5"/>
-  <text x="272" y="79" font-size="12" fill="#4A90D9" font-family="Arial">Режущая 1/3</text>
-  <line x1="220" y1="168" x2="270" y2="168" stroke="#7B68EE" stroke-width="1.5"/>
-  <text x="272" y="172" font-size="12" fill="#7B68EE" font-family="Arial">Средняя 1/3</text>
-  <line x1="220" y1="265" x2="270" y2="265" stroke="#E8943A" stroke-width="1.5"/>
-  <text x="272" y="269" font-size="12" fill="#E8943A" font-family="Arial">Цервикальная</text>
-  <line x1="220" y1="360" x2="270" y2="360" stroke="#888" stroke-width="1.5"/>
-  <text x="272" y="364" font-size="12" fill="#888" font-family="Arial">Корень</text>
+<svg viewBox="0 0 500 450" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Коронка зуба - правильная форма резца -->
+  <!-- Эмаль - внешний контур -->
+  <path d="M160,320 
+           C155,280 140,240 138,200 
+           C135,160 138,120 145,90
+           C150,65 158,45 175,30
+           C185,20 200,15 215,15
+           C230,15 245,20 255,30
+           C270,45 278,65 282,90
+           C288,120 290,160 287,200
+           C285,240 270,280 265,320 Z" 
+        fill="#F5F3EC" stroke="#D4CDB8" stroke-width="2"/>
+
+  <!-- Дентин внутри -->
+  <path d="M175,310 
+           C172,275 162,240 161,205 
+           C159,168 162,130 168,102
+           C173,80 180,62 193,50
+           C200,44 208,41 215,41
+           C222,41 230,44 237,50
+           C250,62 257,80 262,102
+           C268,130 271,168 269,205
+           C267,240 253,275 250,310 Z" 
+        fill="#E8C878" opacity="0.55"/>
+
+  <!-- Мамелоны - три бугорка сверху -->
+  <ellipse cx="192" cy="22" rx="16" ry="22" 
+           fill="#F0EDE4" stroke="#D4CDB8" stroke-width="1.5"/>
+  <ellipse cx="215" cy="15" rx="18" ry="26" 
+           fill="#F0EDE4" stroke="#D4CDB8" stroke-width="1.5"/>
+  <ellipse cx="238" cy="22" rx="16" ry="22" 
+           fill="#F0EDE4" stroke="#D4CDB8" stroke-width="1.5"/>
+
+  <!-- Корень -->
+  <path d="M175,318 
+           C172,345 168,370 175,395
+           C185,415 205,422 215,422
+           C225,422 245,415 255,395
+           C262,370 258,345 250,318 Z" 
+        fill="#C8B090" stroke="#B09870" stroke-width="1.5"/>
+
+  <!-- Линии разделения зон (пунктир) -->
+  <line x1="130" y1="140" x2="300" y2="140" 
+        stroke="#aaa" stroke-width="1" stroke-dasharray="5,4"/>
+  <line x1="130" y1="255" x2="300" y2="255" 
+        stroke="#aaa" stroke-width="1" stroke-dasharray="5,4"/>
+  <line x1="130" y1="320" x2="300" y2="320" 
+        stroke="#aaa" stroke-width="1" stroke-dasharray="5,4"/>
+
+  <!-- Подписи зон -->
+  <line x1="300" y1="75" x2="340" y2="75" stroke="#4A90D9" stroke-width="1.5"/>
+  <text x="345" y="71" font-size="13" fill="#4A90D9" font-family="Arial" font-weight="bold">Режущая 1/3</text>
+  <text x="345" y="87" font-size="11" fill="#4A90D9" font-family="Arial">прозрачность 20-40%</text>
+
+  <line x1="300" y1="197" x2="340" y2="197" stroke="#7B68EE" stroke-width="1.5"/>
+  <text x="345" y="193" font-size="13" fill="#7B68EE" font-family="Arial" font-weight="bold">Средняя 1/3</text>
+  <text x="345" y="209" font-size="11" fill="#7B68EE" font-family="Arial">мамелоны, опал</text>
+
+  <line x1="300" y1="290" x2="340" y2="290" stroke="#E8943A" stroke-width="1.5"/>
+  <text x="345" y="286" font-size="13" fill="#E8943A" font-family="Arial" font-weight="bold">Цервикальная 1/3</text>
+  <text x="345" y="302" font-size="11" fill="#E8943A" font-family="Arial">хрома максимальная</text>
+
+  <line x1="300" y1="375" x2="340" y2="375" stroke="#8B7355" stroke-width="1.5"/>
+  <text x="345" y="371" font-size="13" fill="#8B7355" font-family="Arial" font-weight="bold">Корень</text>
+  <text x="345" y="387" font-size="11" fill="#8B7355" font-family="Arial">цемент</text>
+
 </svg>
 """
 

@@ -1,5 +1,5 @@
 import streamlit as st
-from modules import photo_engineer, anatomy, settings
+from modules import photo_engineer, anatomy, settings, chat
 
 st.set_page_config(page_title="Цифровой Наставник", layout="wide")
 
@@ -120,8 +120,7 @@ elif st.session_state["page"] == "🦴 Анатомия зубов":
     anatomy.show_page()
 
 elif st.session_state["page"] == "💬 Чат техников":
-    st.title("💬 Чат техников")
-    st.info("Раздел в разработке — скоро здесь появится функционал")
+    chat.show_page()
 
 elif st.session_state["page"] == "⚙️ Настройки":
     settings.show_page()

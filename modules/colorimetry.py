@@ -156,124 +156,104 @@ def show_page():
                  use_container_width=True)
         st.session_state["color_crop"] = (x1, y1, x2, y2)
 
-    if st.session_state.get("color_img"):
-        col_analyze, col_reset = st.columns([2, 1])
-        
-        with col_analyze:
-            if st.button("Определить оттенок", type="primary"):
-                img_file = st.session_state["color_img"]
-                img_array = np.array(Image.open(img_file).convert("RGB"))
-                
-                if st.session_state.get("color_crop"):
-                    x1, y1, x2, y2 = st.session_state["color_crop"]
-                    img_array = img_array[y1:y2, x1:x2]
-                
-                if use_wb and st.session_state.get("wb_result"):
-                    wb = st.session_state["wb_result"]
-                    corrected = img_array.astype(np.float32)
-                    corrected[:,:,0] = np.clip(corrected[:,:,0] * wb["gain_r"], 0, 255)
-                    corrected[:,:,1] = np.clip(corrected[:,:,1] * wb["gain_g"], 0, 255)
-                    corrected[:,:,2] = np.clip(corrected[:,:,2] * wb["gain_b"], 0, 255)
-                    img_array = corrected.astype(np.uint8)
-                    st.success("WB-коррекция применена")
-                
-                with st.spinner("Анализирую оттенок..."):
-                    zones = analyze_zones(img_array)
-                    st.session_state["color_result"] = zones
-        
-        with col_reset:
-            if st.button("🔄 Очистить экран"):
-                # Очищаем все сессионные данные колористики
-                keys_to_clear = ["color_img", "color_result", "color_ai_result"]
-                for key in keys_to_clear:
-                    if key in st.session_state:
-                        del st.session_state[key]
-                st.rerun()
+    api_key = st.session_state.get("deepseek_api_key", "")
 
-    if st.session_state.get("color_result"):
-        zones = st.session_state["color_result"]
-        
-        st.divider()
-        st.subheader("Результат анализа по зонам")
+if st.session_state.get("color_img"):
+    st.divider()
+    
+    target_shade = st.selectbox(
+        "Заказанный оттенок (для сравнения)",
+        ["Не указан"] + list(VITA_SHADES.keys())
+    )
+    
+    if api_key:
+        if st.button("Определить оттенок", type="primary"):
+            with st.spinner("AI анализирует только зубы..."):
+                try:
+                    import base64
+                    import requests
+                    from PIL import Image
+                    import io
 
-        cols = st.columns(3)
-        zone_colors = {
-            "Цервикальная": "#E8943A",
-            "Средняя": "#7B68EE", 
-            "Режущая": "#4A90D9"
-        }
+                    img = Image.open(
+                        st.session_state["color_img"]
+                    ).convert("RGB")
+                    buffer = io.BytesIO()
+                    img.save(buffer, format="JPEG")
+                    img_base64 = base64.b64encode(
+                        buffer.getvalue()
+                    ).decode("utf-8")
 
-        for i, (zone_name, data) in enumerate(zones.items()):
-            with cols[i]:
-                rgb = data["rgb"]
-                hex_color = "#{:02x}{:02x}{:02x}".format(
-                    int(rgb[0]), int(rgb[1]), int(rgb[2])
-                )
-                st.markdown(
-                    f'<div style="background:{hex_color};height:60px;'
-                    f'border-radius:8px;margin-bottom:8px;"></div>',
-                    unsafe_allow_html=True
-                )
-                st.markdown(f"**{zone_name} зона**")
-                st.markdown(f"Оттенок: **{data['shade']}**")
-                st.markdown(f"L: {data['L']} | a: {data['a']} | b: {data['b']}")
-                st.caption(VITA_SHADES[data['shade']]['description'])
+                    shade_text = f"Заказанный оттенок: {target_shade}." if target_shade != "Не указан" else ""
 
-        st.divider()
-        
-        shades = [zones[z]["shade"] for z in zones]
-        most_common = max(set(shades), key=shades.count)
-        
-        st.subheader("Общий оттенок")
-        col_result, col_compare = st.columns(2)
-        
-        with col_result:
-            st.metric("Определённый оттенок", most_common)
-            st.markdown(VITA_SHADES[most_common]["description"])
-        
-        with col_compare:
-            if target_shade != "Не указан":
-                if most_common == target_shade:
-                    st.success(f"✅ Совпадает с заказом ({target_shade})")
-                else:
-                    target_L = VITA_SHADES[target_shade]["L"]
-                    current_L = VITA_SHADES[most_common]["L"]
-                    diff = current_L - target_L
-                    if diff > 0:
-                        st.warning(f"⚠️ Светлее заказанного на {abs(diff):.0f} ед.")
+                    prompt = f"""You are a dental colorimetry expert.
+Analyze ONLY the ceramic crown or tooth in this photo.
+Ignore gums, background, shadows, and anything that is not the tooth.
+
+{shade_text}
+
+Respond in Russian with this exact format:
+
+**ОТТЕНОК ПО VITA:**
+- Цервикальная зона: [оттенок]
+- Средняя зона: [оттенок]  
+- Режущая зона: [оттенок]
+- Общий оттенок: [оттенок]
+
+**СРАВНЕНИЕ С ЗАКАЗОМ:**
+[совпадает или отличается и как именно]
+
+**ХАРАКТЕРИСТИКА:**
+- Value (яркость): [высокий/средний/низкий]
+- Chroma (насыщенность): [высокая/средняя/низкая]
+- Hue (тон): [тёплый A/нейтральный B/серый C/розовый D]
+
+**РЕКОМЕНДАЦИИ ТЕХНИКУ:**
+[конкретные действия для доработки]"""
+
+                    headers = {
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json"
+                    }
+                    payload = {
+                        "model": "deepseek-chat",
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": [
+                                    {
+                                        "type": "image_url",
+                                        "image_url": {
+                                            "url": f"data:image/jpeg;base64,{img_base64}"
+                                        }
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": prompt
+                                    }
+                                ]
+                            }
+                        ],
+                        "max_tokens": 800
+                    }
+                    response = requests.post(
+                        "https://api.deepseek.com/chat/completions",
+                        headers=headers,
+                        json=payload
+                    )
+                    if response.status_code == 200:
+                        result = response.json()[
+                            "choices"
+                        ][0]["message"]["content"]
+                        st.session_state["color_result"] = result
                     else:
-                        st.warning(f"⚠️ Темнее заказанного на {abs(diff):.0f} ед.")
+                        st.error(f"Ошибка API: {response.status_code}")
+                except Exception as e:
+                    st.error(f"Ошибка: {str(e)}")
+    else:
+        st.warning("Перейди в ⚙️ Настройки и введи DeepSeek API ключ")
 
-        api_key = st.session_state.get("deepseek_api_key", "")
-        if api_key:
-            st.divider()
-            if st.button("Получить рекомендации по доработке"):
-                shade_info = ", ".join([f"{z}: {d['shade']}" for z, d in zones.items()])
-                question = f"""Анализ коронки показал оттенки по зонам: {shade_info}.
-                Заказанный оттенок: {target_shade if target_shade != 'Не указан' else 'не указан'}.
-                Дай конкретные рекомендации что нужно сделать технику 
-                чтобы привести коронку к нужному оттенку."""
-                
-                with st.spinner("AI формирует рекомендации..."):
-                    from modules import ai_analysis
-                    try:
-                        headers = {"Authorization": f"Bearer {api_key}",
-                                   "Content-Type": "application/json"}
-                        payload = {
-                            "model": "deepseek-chat",
-                            "messages": [{"role": "user", "content": question}],
-                            "max_tokens": 600
-                        }
-                        import requests
-                        response = requests.post(
-                            "https://api.deepseek.com/chat/completions",
-                            headers=headers, json=payload
-                        )
-                        if response.status_code == 200:
-                            result = response.json()["choices"][0]["message"]["content"]
-                            st.session_state["color_ai_result"] = result
-                    except Exception as e:
-                        st.error(f"Ошибка: {str(e)}")
-
-        if st.session_state.get("color_ai_result"):
-            st.markdown(st.session_state["color_ai_result"])
+if st.session_state.get("color_result"):
+    st.divider()
+    st.subheader("Результат анализа")
+    st.markdown(st.session_state["color_result"])

@@ -171,7 +171,6 @@ def show_page():
                     try:
                         import base64
                         import requests
-                        from PIL import Image
                         import io
 
                         img = Image.open(

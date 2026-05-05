@@ -28,7 +28,9 @@ Analyze this dental crown photo and provide recommendations in Russian.
    - толщина слоя
    - температура обжига
 
-Отвечай на русском. Конкретно и профессионально."""
+Отвечай на русском. Конкретно и профессионально.
+
+Image data: data:image/jpeg;base64,{img_base64}"""
 
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -40,18 +42,7 @@ Analyze this dental crown photo and provide recommendations in Russian.
         "messages": [
             {
                 "role": "user",
-                "content": [
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{img_base64}"
-                        }
-                    },
-                    {
-                        "type": "text",
-                        "text": prompt
-                    }
-                ]
+                "content": prompt
             }
         ],
         "max_tokens": 1000

@@ -246,6 +246,7 @@ Respond in Russian with this exact format:
                             st.session_state["color_result"] = result
                         else:
                             st.error(f"Ошибка API: {response.status_code}")
+                            st.error(f"Детали: {response.text}")
                     except Exception as e:
                         st.error(f"Ошибка: {str(e)}")
         else:

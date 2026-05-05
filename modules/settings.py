@@ -30,3 +30,16 @@ def show_page():
 
     st.divider()
     st.caption("Ключи хранятся только в текущей сессии и не передаются третьим лицам.")
+
+    st.divider()
+
+    st.subheader("Claude API (Anthropic)")
+    claude_key = st.text_input(
+        "Claude API ключ",
+        type="password",
+        placeholder="sk-ant-...",
+        value=st.session_state.get("claude_api_key", "")
+    )
+    if st.button("Сохранить Claude ключ"):
+        st.session_state["claude_api_key"] = claude_key
+        st.success("Ключ сохранён!")

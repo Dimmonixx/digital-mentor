@@ -149,38 +149,24 @@ def show_page():
 
     if st.session_state.get("color_img"):
         st.divider()
-        st.subheader("Выдели зону зуба")
-        st.caption("Обрежь кадр чтобы остался только зуб")
+        st.subheader("Обрежь лишнее")
+        st.caption("Убери губы сверху и подбородок снизу — оставь только зубы")
 
         img_temp = Image.open(st.session_state["color_img"]).convert("RGB")
-        w_img, h_img = img_temp.size
-
-        col_s1, col_s2 = st.columns(2)
-        with col_s1:
-            x_start = st.slider("Левая граница %", 0, 45, 10)
-            y_start = st.slider("Верхняя граница %", 0, 45, 5)
-        with col_s2:
-            x_end = st.slider("Правая граница %", 55, 100, 90)
-            y_end = st.slider("Нижняя граница %", 55, 100, 90)
-
-        x1 = int(w_img * x_start / 100)
-        y1 = int(h_img * y_start / 100)
-        x2 = int(w_img * x_end / 100)
-        y2 = int(h_img * y_end / 100)
-
         img_array = np.array(img_temp)
-        cropped = img_array[y1:y2, x1:x2]
-        mask = apply_tooth_mask(cropped)
-        cleaned = cropped.copy()
-        cleaned[mask == 0] = [128, 128, 128]
+        h_img, w_img = img_array.shape[:2]
 
-        col_prev1, col_prev2 = st.columns(2)
-        with col_prev1:
-            st.caption("Обрезанная зона")
-            st.image(cropped, use_container_width=True)
-        with col_prev2:
-            st.caption("После очистки фона")
-            st.image(cleaned, use_container_width=True)
+        top_cut = st.slider("Убрать сверху %", 0, 60, 0)
+        bottom_cut = st.slider("Убрать снизу %", 0, 60, 0)
+
+        y1 = int(h_img * top_cut / 100)
+        y2 = int(h_img * (100 - bottom_cut) / 100)
+
+        cropped = img_array[y1:y2, :, :]
+
+        st.image(cropped, caption="Результат обрезки", 
+                 use_container_width=True)
+        st.session_state["color_cropped"] = cropped
 
         st.divider()
         api_key = st.session_state.get("claude_api_key", "")
@@ -189,7 +175,15 @@ def show_page():
             if st.button("Анализировать оттенок", type="primary"):
                 with st.spinner("Claude анализирует коронку..."):
                     try:
-                        result = analyze_with_claude(cleaned, target_shade, api_key)
+                        img_to_analyze = st.session_state.get(
+                            "color_cropped", 
+                            np.array(Image.open(
+                                st.session_state["color_img"]
+                            ).convert("RGB"))
+                        )
+                        result = analyze_with_claude(
+                            img_to_analyze, target_shade, api_key
+                        )
                         st.session_state["color_result"] = result
                     except Exception as e:
                         st.error(f"Ошибка: {str(e)}")

@@ -214,7 +214,7 @@ Respond in Russian with this exact format:
                             "Content-Type": "application/json"
                         }
                         payload = {
-                            "model": "deepseek-vision",
+                            "model": "deepseek-vl2",
                             "messages": [
                                 {
                                     "role": "user",

@@ -131,22 +131,64 @@ def show_page():
         )
 
     if st.session_state.get("color_img"):
-        if st.button("Определить оттенок", type="primary"):
-            img_file = st.session_state["color_img"]
-            img_array = np.array(Image.open(img_file).convert("RGB"))
-            
-            if use_wb and st.session_state.get("wb_result"):
-                wb = st.session_state["wb_result"]
-                corrected = img_array.astype(np.float32)
-                corrected[:,:,0] = np.clip(corrected[:,:,0] * wb["gain_r"], 0, 255)
-                corrected[:,:,1] = np.clip(corrected[:,:,1] * wb["gain_g"], 0, 255)
-                corrected[:,:,2] = np.clip(corrected[:,:,2] * wb["gain_b"], 0, 255)
-                img_array = corrected.astype(np.uint8)
-                st.success("WB-коррекция применена")
-            
-            with st.spinner("Анализирую оттенок..."):
-                zones = analyze_zones(img_array)
-                st.session_state["color_result"] = zones
+        st.divider()
+        st.subheader("Выдели зону зуба для анализа")
+        st.caption("Обрежь кадр чтобы в анализ попал только зуб без дёсен и фона")
+        
+        img_temp = Image.open(st.session_state["color_img"]).convert("RGB")
+        w_img, h_img = img_temp.size
+        
+        col_s1, col_s2 = st.columns(2)
+        with col_s1:
+            x_start = st.slider("Левая граница %", 0, 40, 10)
+            y_start = st.slider("Верхняя граница %", 0, 40, 5)
+        with col_s2:
+            x_end = st.slider("Правая граница %", 60, 100, 90)
+            y_end = st.slider("Нижняя граница %", 60, 100, 85)
+        
+        x1 = int(w_img * x_start / 100)
+        y1 = int(h_img * y_start / 100)
+        x2 = int(w_img * x_end / 100)
+        y2 = int(h_img * y_end / 100)
+        
+        cropped = img_temp.crop((x1, y1, x2, y2))
+        st.image(cropped, caption="Выделенная зона для анализа", 
+                 use_container_width=True)
+        st.session_state["color_crop"] = (x1, y1, x2, y2)
+
+    if st.session_state.get("color_img"):
+        col_analyze, col_reset = st.columns([2, 1])
+        
+        with col_analyze:
+            if st.button("Определить оттенок", type="primary"):
+                img_file = st.session_state["color_img"]
+                img_array = np.array(Image.open(img_file).convert("RGB"))
+                
+                if st.session_state.get("color_crop"):
+                    x1, y1, x2, y2 = st.session_state["color_crop"]
+                    img_array = img_array[y1:y2, x1:x2]
+                
+                if use_wb and st.session_state.get("wb_result"):
+                    wb = st.session_state["wb_result"]
+                    corrected = img_array.astype(np.float32)
+                    corrected[:,:,0] = np.clip(corrected[:,:,0] * wb["gain_r"], 0, 255)
+                    corrected[:,:,1] = np.clip(corrected[:,:,1] * wb["gain_g"], 0, 255)
+                    corrected[:,:,2] = np.clip(corrected[:,:,2] * wb["gain_b"], 0, 255)
+                    img_array = corrected.astype(np.uint8)
+                    st.success("WB-коррекция применена")
+                
+                with st.spinner("Анализирую оттенок..."):
+                    zones = analyze_zones(img_array)
+                    st.session_state["color_result"] = zones
+        
+        with col_reset:
+            if st.button("🔄 Очистить экран"):
+                # Очищаем все сессионные данные колористики
+                keys_to_clear = ["color_img", "color_result", "color_ai_result"]
+                for key in keys_to_clear:
+                    if key in st.session_state:
+                        del st.session_state[key]
+                st.rerun()
 
     if st.session_state.get("color_result"):
         zones = st.session_state["color_result"]

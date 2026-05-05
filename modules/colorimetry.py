@@ -158,7 +158,7 @@ def show_page():
 
     st.divider()
     
-    api_key = st.session_state.get("deepseek_api_key", "")
+    api_key = st.session_state.get("claude_api_key", "")
     
     col_analyze, col_reset = st.columns([2, 1])
     
@@ -250,7 +250,7 @@ Respond in Russian with this exact format:
                     except Exception as e:
                         st.error(f"Ошибка: {str(e)}")
         else:
-            st.warning("Перейди в ⚙️ Настройки и введи DeepSeek API ключ")
+            st.warning("Перейди в ⚙️ Настройки и введи Claude API ключ")
     
     with col_reset:
         if st.button("🔄 Очистить экран"):

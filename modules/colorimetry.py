@@ -127,7 +127,7 @@ def show_page():
         
         target_shade = st.selectbox(
             "Заказанный оттенок (для сравнения)",
-            ["Не указан"] + list(VITA_SHADES.keys())
+            ["Не указан"] + list(VITA_SHADES.keys()), key="target_shade_main"
         )
 
     if st.session_state.get("color_img"):
@@ -156,37 +156,36 @@ def show_page():
                  use_container_width=True)
         st.session_state["color_crop"] = (x1, y1, x2, y2)
 
-    api_key = st.session_state.get("deepseek_api_key", "")
-
-if st.session_state.get("color_img"):
     st.divider()
     
-    target_shade = st.selectbox(
-        "Заказанный оттенок (для сравнения)",
-        ["Не указан"] + list(VITA_SHADES.keys())
-    )
+    api_key = st.session_state.get("deepseek_api_key", "")
     
-    if api_key:
-        if st.button("Определить оттенок", type="primary"):
-            with st.spinner("AI анализирует только зубы..."):
-                try:
-                    import base64
-                    import requests
-                    from PIL import Image
-                    import io
+    col_analyze, col_reset = st.columns([2, 1])
+    
+    with col_analyze:
+        target_shade = st.session_state.get("target_shade_main", "Не указан")
+        
+        if api_key:
+            if st.button("Определить оттенок", type="primary"):
+                with st.spinner("AI анализирует только зубы..."):
+                    try:
+                        import base64
+                        import requests
+                        from PIL import Image
+                        import io
 
-                    img = Image.open(
-                        st.session_state["color_img"]
-                    ).convert("RGB")
-                    buffer = io.BytesIO()
-                    img.save(buffer, format="JPEG")
-                    img_base64 = base64.b64encode(
-                        buffer.getvalue()
-                    ).decode("utf-8")
+                        img = Image.open(
+                            st.session_state["color_img"]
+                        ).convert("RGB")
+                        buffer = io.BytesIO()
+                        img.save(buffer, format="JPEG")
+                        img_base64 = base64.b64encode(
+                            buffer.getvalue()
+                        ).decode("utf-8")
 
-                    shade_text = f"Заказанный оттенок: {target_shade}." if target_shade != "Не указан" else ""
+                        shade_text = f"Заказанный оттенок: {target_shade}." if target_shade != "Не указан" else ""
 
-                    prompt = f"""You are a dental colorimetry expert.
+                        prompt = f"""You are a dental colorimetry expert.
 Analyze ONLY the ceramic crown or tooth in this photo.
 Ignore gums, background, shadows, and anything that is not the tooth.
 
@@ -211,47 +210,56 @@ Respond in Russian with this exact format:
 **РЕКОМЕНДАЦИИ ТЕХНИКУ:**
 [конкретные действия для доработки]"""
 
-                    headers = {
-                        "Authorization": f"Bearer {api_key}",
-                        "Content-Type": "application/json"
-                    }
-                    payload = {
-                        "model": "deepseek-chat",
-                        "messages": [
-                            {
-                                "role": "user",
-                                "content": [
-                                    {
-                                        "type": "image_url",
-                                        "image_url": {
-                                            "url": f"data:image/jpeg;base64,{img_base64}"
+                        headers = {
+                            "Authorization": f"Bearer {api_key}",
+                            "Content-Type": "application/json"
+                        }
+                        payload = {
+                            "model": "deepseek-chat",
+                            "messages": [
+                                {
+                                    "role": "user",
+                                    "content": [
+                                        {
+                                            "type": "image_url",
+                                            "image_url": {
+                                                "url": f"data:image/jpeg;base64,{img_base64}"
+                                            }
+                                        },
+                                        {
+                                            "type": "text",
+                                            "text": prompt
                                         }
-                                    },
-                                    {
-                                        "type": "text",
-                                        "text": prompt
-                                    }
-                                ]
-                            }
-                        ],
-                        "max_tokens": 800
-                    }
-                    response = requests.post(
-                        "https://api.deepseek.com/chat/completions",
-                        headers=headers,
-                        json=payload
-                    )
-                    if response.status_code == 200:
-                        result = response.json()[
-                            "choices"
-                        ][0]["message"]["content"]
-                        st.session_state["color_result"] = result
-                    else:
-                        st.error(f"Ошибка API: {response.status_code}")
-                except Exception as e:
-                    st.error(f"Ошибка: {str(e)}")
-    else:
-        st.warning("Перейди в ⚙️ Настройки и введи DeepSeek API ключ")
+                                    ]
+                                }
+                            ],
+                            "max_tokens": 800
+                        }
+                        response = requests.post(
+                            "https://api.deepseek.com/chat/completions",
+                            headers=headers,
+                            json=payload
+                        )
+                        if response.status_code == 200:
+                            result = response.json()[
+                                "choices"
+                            ][0]["message"]["content"]
+                            st.session_state["color_result"] = result
+                        else:
+                            st.error(f"Ошибка API: {response.status_code}")
+                    except Exception as e:
+                        st.error(f"Ошибка: {str(e)}")
+        else:
+            st.warning("Перейди в ⚙️ Настройки и введи DeepSeek API ключ")
+    
+    with col_reset:
+        if st.button("🔄 Очистить экран"):
+            # Очищаем все сессионные данные колористики
+            keys_to_clear = ["color_img", "color_result", "color_ai_result", "color_crop"]
+            for key in keys_to_clear:
+                if key in st.session_state:
+                    del st.session_state[key]
+            st.rerun()
 
 if st.session_state.get("color_result"):
     st.divider()

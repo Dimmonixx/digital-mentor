@@ -6,7 +6,6 @@ import base64
 import requests
 import io
 import os
-from streamlit_drawable_canvas import st_canvas
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -150,46 +149,35 @@ def show_page():
 
     if st.session_state.get("color_img"):
         st.divider()
-        st.subheader("Выдели зубы")
-        st.caption("Нарисуй прямоугольник вокруг зубов мышкой")
+        st.subheader("Выбери зону анализа")
 
         img_temp = Image.open(
             st.session_state["color_img"]
         ).convert("RGB")
-        
-        canvas_result = st_canvas(
-            fill_color="rgba(0, 150, 255, 0.1)",
-            stroke_width=2,
-            stroke_color="#0096FF",
-            background_image=img_temp,
-            update_streamlit=True,
-            height=400,
-            drawing_mode="rect",
-            key="canvas_tooth",
-        )
+        img_array = np.array(img_temp)
+        h_img, w_img = img_array.shape[:2]
 
-        if (canvas_result.json_data is not None and 
-            len(canvas_result.json_data["objects"]) > 0):
-            obj = canvas_result.json_data["objects"][-1]
-            
-            img_array = np.array(img_temp)
-            h_img, w_img = img_array.shape[:2]
-            
-            scale_x = w_img / canvas_result.json_data.get("width", w_img)
-            scale_y = h_img / 400
-            
-            x1 = max(0, int(obj["left"] * scale_x))
-            y1 = max(0, int(obj["top"] * scale_y))
-            x2 = min(w_img, int((obj["left"] + obj["width"]) * scale_x))
-            y2 = min(h_img, int((obj["top"] + obj["height"]) * scale_y))
-            
-            cropped = img_array[y1:y2, x1:x2]
-            
-            if cropped.size > 0:
-                st.image(cropped, 
-                         caption="Выделенная зона",
-                         use_container_width=True)
-                st.session_state["color_cropped"] = cropped
+        st.image(img_temp, use_container_width=True)
+
+        col_t, col_b = st.columns(2)
+        with col_t:
+            top_cut = st.slider("Убрать сверху %", 0, 50, 10)
+            left_cut = st.slider("Убрать слева %", 0, 40, 0)
+        with col_b:
+            bottom_cut = st.slider("Убрать снизу %", 0, 50, 10)
+            right_cut = st.slider("Убрать справа %", 0, 40, 0)
+
+        y1 = int(h_img * top_cut / 100)
+        y2 = int(h_img * (100 - bottom_cut) / 100)
+        x1 = int(w_img * left_cut / 100)
+        x2 = int(w_img * (100 - right_cut) / 100)
+
+        cropped = img_array[y1:y2, x1:x2]
+
+        if cropped.shape[0] > 0 and cropped.shape[1] > 0:
+            st.caption("Выделенная зона для анализа:")
+            st.image(cropped, use_container_width=True)
+            st.session_state["color_cropped"] = cropped
 
         st.divider()
         api_key = st.session_state.get("claude_api_key", "")

@@ -131,16 +131,28 @@ def show_page():
 
     st.divider()
 
-    # Стиль для input полей
     st.markdown("""
     <style>
-    .stTextArea textarea, .stTextInput input {
-        border: 1.5px solid #1a3a5c !important;
-        border-radius: 6px !important;
+    /* Убираем красный hover на кнопках загрузки */
+    .stFileUploader button:hover {
+        border-color: #1a3a5c !important;
+        color: #1a3a5c !important;
     }
-    .stFileUploader {
-        border: 1.5px solid #1a3a5c !important;
-        border-radius: 6px !important;
+    .stFileUploader button {
+        border-color: #888 !important;
+    }
+    /* Убираем красную обводку с полей */
+    .stTextArea textarea:focus {
+        border-color: #1a3a5c !important;
+        box-shadow: 0 0 0 1px #1a3a5c !important;
+    }
+    .stTextArea textarea {
+        border: 1px solid #ddd !important;
+    }
+    /* Камера кнопка */
+    .stCameraInput button:hover {
+        border-color: #1a3a5c !important;
+        color: #1a3a5c !important;
     }
     </style>
     """, unsafe_allow_html=True)

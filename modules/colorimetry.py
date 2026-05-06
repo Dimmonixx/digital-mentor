@@ -33,37 +33,52 @@ def image_to_base64(img_array):
     img_pil.save(buffer, format="JPEG", quality=90)
     return base64.b64encode(buffer.getvalue()).decode("utf-8")
 
-def analyze_with_claude(img_array, target_shade, notes, api_key):
+def analyze_with_claude(img_array, target_shade, notes, work_stage, api_key):
     img_base64 = image_to_base64(img_array)
     shade_text = f"Заказанный оттенок: {target_shade}." if target_shade != "Не указан" else ""
     notes_text = f"Комментарий техника: {notes}" if notes else ""
+    stage_text = f"Этап работы: {work_stage}." if work_stage != "Не указан" else ""
 
-    prompt = f"""Ты опытный зубной техник-керамист.
-Перед тобой фото зубной работы.
-На фото могут быть десна, фон, модель — игнорируй их.
-Анализируй ТОЛЬКО керамику коронки/коронок.
+    prompt = f"""Ты опытный зубной техник-керамист с 20-летним стажем.
+У тебя дружелюбный и немного ироничный стиль — как у старшего коллеги который видел всякое.
+Например начни с чего-то типа "Ну давай посмотрим что тут получилось..." или 
+"Хм, интересное решение..." или "Окей бро, разберём..."
+
+На фото зубная работа. Игнорируй дёсны, фон, модель — анализируй только керамику.
 
 {shade_text}
+{stage_text}
 {notes_text}
 
-Дай профессиональный анализ:
+Дай профессиональный анализ по такой структуре:
 
 **ОТТЕНОК ПО VITA:**
-- Цервикальная зона: [оттенок + насыщенность]
-- Средняя зона: [оттенок + мамелоны]
+- Цервикальная зона: [оттенок + насыщенность хромы]
+- Средняя зона: [оттенок + мамелоны есть/нет]
 - Режущая зона: [оттенок + прозрачность %]
 - Общий оттенок: [итог]
 
-**ГРАДИЕНТ ЗОН:**
-[правильный/нарушен + объяснение]
+**ГРАДИЕНТ И ГАРМОНИЯ:**
+- Градиент зон: [правильный/нарушен + почему]
+- Симметрия: [оцени если видно несколько зубов]
+- Гармония с соседними зубами: [если видны]
+- Размер и пропорции: [оцени]
+- Краевое прилегание: [оцени если видно]
 
 **ПРОБЛЕМЫ:**
-[конкретно что не так или "не выявлено"]
+[конкретно что не так или "Всё чисто, бро"]
 
-**ПЛАН ДОРАБОТКИ:**
-[пошагово что делать технику]
+**ПЛАН КОРРЕКЦИИ:**
 
-Отвечай на русском. Коротко и профессионально."""
+🔴 РАДИКАЛЬНОЕ (спиливание/добавление керамики, перепечь):
+[только если без этого не обойтись — конкретные действия]
+[если не нужно — напиши "Не требуется"]
+
+🟡 ПОВЕРХНОСТНОЕ (красители, глазурь, минимальная коррекция):
+[что можно исправить без переделки]
+[если не нужно — напиши "Не требуется"]
+
+Отвечай на русском. Будь конкретным, дружелюбным и ироничным."""
 
     headers = {
         "x-api-key": api_key,
@@ -104,15 +119,36 @@ def analyze_with_claude(img_array, target_shade, notes, api_key):
         raise Exception(f"Ошибка {response.status_code}: {response.text}")
 
 def show_page():
-    st.title("Колористика")
-    st.info("Загрузи фото коронки — Claude проанализирует оттенок по зонам как опытный техник.")
+    st.title("🎨 Колористика")
+    st.info("Загрузи фото работы — Claude разберёт что к чему. Можно несколько фото сразу.")
+
+    # Кнопка сброса
+    if st.button("🗑️ Очистить и начать заново"):
+        for key in ["color_img", "color_result", "color_chat"]:
+            if key in st.session_state:
+                del st.session_state[key]
+        st.rerun()
 
     st.divider()
+
+    # Стиль для input полей
+    st.markdown("""
+    <style>
+    .stTextArea textarea, .stTextInput input {
+        border: 1.5px solid #1a3a5c !important;
+        border-radius: 6px !important;
+    }
+    .stFileUploader {
+        border: 1.5px solid #1a3a5c !important;
+        border-radius: 6px !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
 
     with col1:
-        st.subheader("Фото коронки")
+        st.subheader("📷 Фото работы")
         img_file = st.camera_input("Сфотографировать", key="cam_color")
         if not img_file:
             img_file = st.file_uploader(
@@ -122,37 +158,62 @@ def show_page():
             )
         if img_file:
             st.session_state["color_img"] = img_file
-        if st.session_state.get("color_img"):
-            st.image(st.session_state["color_img"],
-                     use_container_width=True)
 
     with col2:
-        st.subheader("Параметры")
-        target_shade = st.selectbox(
-            "Заказанный оттенок",
-            ["Не указан"] + list(VITA_SHADES.keys()),
-            key="target_shade_main"
-        )
-        notes = st.text_area(
-            "Комментарий (необязательно)",
-            placeholder="Например: коронка после 3-го обжига, нужно светлее в режущей зоне...",
-            height=120
-        )
-        st.markdown("""
-        **Советы для точного анализа:**
-        - Чёрный фон — лучший результат
-        - Равномерное освещение
-        - Коронка в фокусе
-        """)
+        if st.session_state.get("color_img"):
+            st.subheader("Превью")
+            img_temp = Image.open(
+                st.session_state["color_img"]
+            ).convert("RGB")
+            w, h = img_temp.size
+            max_w = 400
+            if w > max_w:
+                ratio = max_w / w
+                img_temp = img_temp.resize(
+                    (max_w, int(h * ratio))
+                )
+            st.image(img_temp, use_container_width=True)
+        else:
+            st.subheader("Превью")
+            st.markdown("""
+            <div style="height:200px; background:#f0f2f6; 
+                border-radius:10px; display:flex; 
+                align-items:center; justify-content:center;
+                color:#888; font-size:14px;">
+                Фото появится здесь
+            </div>
+            """, unsafe_allow_html=True)
 
     if st.session_state.get("color_img"):
         st.divider()
 
+        col_p1, col_p2 = st.columns(2)
+        with col_p1:
+            target_shade = st.selectbox(
+                "Заказанный оттенок",
+                ["Не указан"] + list(VITA_SHADES.keys()),
+                key="target_shade_main"
+            )
+        with col_p2:
+            work_stage = st.selectbox(
+                "Этап работы",
+                ["Не указан", "Бисквит после 1-го обжига",
+                 "После 2-го обжига", "Финальный обжиг",
+                 "Готовая работа (глазурь)"],
+                key="work_stage"
+            )
+
+        notes = st.text_area(
+            "Комментарий к работе (необязательно)",
+            placeholder="Например: 2 центральных резца, пациент 35 лет, просит натуральный вид...",
+            height=80
+        )
+
         api_key = st.session_state.get("claude_api_key", "")
 
         if api_key:
-            if st.button("Анализировать оттенок", type="primary"):
-                with st.spinner("Claude анализирует коронку..."):
+            if st.button("🔍 Анализ работы", type="primary"):
+                with st.spinner("Смотрим что тут получилось..."):
                     try:
                         img_array = np.array(
                             Image.open(
@@ -160,15 +221,75 @@ def show_page():
                             ).convert("RGB")
                         )
                         result = analyze_with_claude(
-                            img_array, target_shade, notes, api_key
+                            img_array, target_shade,
+                            notes, work_stage, api_key
                         )
                         st.session_state["color_result"] = result
+                        st.session_state["color_chat"] = []
                     except Exception as e:
                         st.error(f"Ошибка: {str(e)}")
         else:
-            st.warning("Перейди в Настройки и введи Claude API ключ")
+            st.warning("Перейди в ⚙️ Настройки и введи Claude API ключ")
 
-        if st.session_state.get("color_result"):
-            st.divider()
-            st.subheader("Результат анализа")
-            st.markdown(st.session_state["color_result"])
+    if st.session_state.get("color_result"):
+        st.divider()
+        st.subheader("📋 Результат анализа")
+        st.markdown(st.session_state["color_result"])
+
+        st.divider()
+        st.subheader("💬 Вопросы по работе")
+        st.caption("Есть вопросы по анализу? Спроси — отвечу.")
+
+        if "color_chat" not in st.session_state:
+            st.session_state["color_chat"] = []
+
+        for msg in st.session_state["color_chat"]:
+            with st.chat_message(msg["role"]):
+                st.markdown(msg["content"])
+
+        if question := st.chat_input("Спроси что-то по работе..."):
+            st.session_state["color_chat"].append(
+                {"role": "user", "content": question}
+            )
+            api_key = st.session_state.get("claude_api_key", "")
+            if api_key:
+                with st.spinner("Думаю..."):
+                    try:
+                        context = st.session_state["color_result"]
+                        headers = {
+                            "x-api-key": api_key,
+                            "anthropic-version": "2023-06-01",
+                            "content-type": "application/json"
+                        }
+                        payload = {
+                            "model": "claude-opus-4-5",
+                            "max_tokens": 512,
+                            "messages": [
+                                {
+                                    "role": "user",
+                                    "content": f"""Ты опытный зубной техник-керамист с дружелюбным и немного ироничным стилем общения.
+Ранее ты дал такой анализ работы:
+
+{context}
+
+Теперь техник задаёт уточняющий вопрос: {question}
+
+Отвечай на русском, дружелюбно и по делу."""
+                                }
+                            ]
+                        }
+                        response = requests.post(
+                            "https://api.anthropic.com/v1/messages",
+                            headers=headers,
+                            json=payload
+                        )
+                        if response.status_code == 200:
+                            answer = response.json()[
+                                "content"
+                            ][0]["text"]
+                            st.session_state["color_chat"].append(
+                                {"role": "assistant", "content": answer}
+                            )
+                            st.rerun()
+                    except Exception as e:
+                        st.error(f"Ошибка: {str(e)}")

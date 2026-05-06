@@ -100,7 +100,7 @@ elif st.session_state["page"] == "🔍 Детекция дефектов":
     st.title("🔍 Детекция дефектов")
     st.info("Раздел в разработке — скоро здесь появится функционал")
 
-elif st.session_state["page"] == "🎨 Колористика":
+elif page == "🎨 Анализ работы":
     colorimetry.show_page()
 
 elif st.session_state["page"] == "📋 Тех-карта":

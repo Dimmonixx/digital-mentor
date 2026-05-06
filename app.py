@@ -17,7 +17,7 @@ page = st.sidebar.radio(
         "🏠 Главная",
         "📷 Фото-инженер",
         "🔍 Детекция дефектов",
-        "🎨 Колористика",
+        "🎨 Анализ работы",
         "📋 Тех-карта",
         "🔬 Морфология",
         "📁 Кейсы",
@@ -29,7 +29,7 @@ page = st.sidebar.radio(
         "🏠 Главная",
         "📷 Фото-инженер",
         "🔍 Детекция дефектов",
-        "🎨 Колористика",
+        "🎨 Анализ работы",
         "📋 Тех-карта",
         "🔬 Морфология",
         "📁 Кейсы",
@@ -60,8 +60,8 @@ if st.session_state["page"] == "🏠 Главная":
             st.session_state["page"] = "🔍 Детекция дефектов"
             st.rerun()
     with col3:
-        if st.button("🎨 Колористика", use_container_width=True):
-            st.session_state["page"] = "🎨 Колористика"
+        if st.button("🎨 Анализ работы", use_container_width=True):
+            st.session_state["page"] = "🎨 Анализ работы"
             st.rerun()
 
     # Row 2

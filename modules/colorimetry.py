@@ -119,8 +119,8 @@ def analyze_with_claude(img_array, target_shade, notes, work_stage, api_key):
         raise Exception(f"Ошибка {response.status_code}: {response.text}")
 
 def show_page():
-    st.title("🎨 Колористика")
-    st.info("Загрузи фото работы — Claude разберёт что к чему. Можно несколько фото сразу.")
+    st.title("🎨 Анализ работы")
+    st.info("Загрузи фото работы — разберём форму, оттенок, градиент зон и что с этим делать.")
 
     # Кнопка сброса
     if st.button("🗑️ Очистить и начать заново"):

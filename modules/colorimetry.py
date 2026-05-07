@@ -50,17 +50,20 @@ def analyze_with_claude(img_array, target_shade, notes, work_stage, analysis_typ
 {type_text}
 {notes_text}
 
-УРОВНИ КАЧЕСТВА РАБОТЫ (используй в анализе):
-⭐ МАСТЕР — работа неотличима от натурального зуба
-✅ ХОРОШО — небольшие недочёты, работа приемлема
-⚠️ УДОВЛЕТВОРИТЕЛЬНО — видны как искусственные, но терпимо
-❌ СЛАБО — очевидные ошибки, нужна серьёзная доработка
-💀 БРАК — работа не принимается, переделывать
+УРОВНИ КАЧЕСТВА РАБОТЫ:
+⭐ МАСТЕР — работа неотличима от натурального зуба, высший класс
+✅ ХОРОШО — незначительные недочёты, работа достойная
+⚠️ УДОВЛЕТВОРИТЕЛЬНО — заметны как искусственные, есть проблемы
+❌ СЛАБО — очевидные грубые ошибки, нужна серьёзная переделка  
+💀 БРАК — это не работа, это заготовка. Переделывать полностью.
 
-ГРАДАЦИЯ СТРОГОСТИ:
-- До 25% ошибок: конструктивная критика
-- 25-40% ошибок: жёсткая критика, называй вещи своими именами
-- Выше 40% ошибок: режим сенсея — "это не работа, это заготовка"
+ГРАДАЦИЯ СТРОГОСТИ (будь честен, не занижай уровень):
+- До 20% проблем: ✅ ХОРОШО
+- 20-35% проблем: ⚠️ УДОВЛЕТВОРИТЕЛЬНО  
+- 35-50% проблем: ❌ СЛАБО
+- Выше 50% проблем: 💀 БРАК
+Работа на фото со значительными проблемами цвета, формы, 
+сепарации — это минимум ❌ СЛАБО.
 
 СТРОГИЕ ПРАВИЛА:
 1. ДЕСНА — описывай только то что РЕАЛЬНО видно:
@@ -118,12 +121,14 @@ def analyze_with_claude(img_array, target_shade, notes, work_stage, analysis_typ
 - Мамелоны (бугорки режущего края): [есть/нет + контекст возраста]
 - Пропорции: [точное соотношение ширина/высота для каждого зуба]
 - Форма: [тип + соответствие возрасту пациента]
+**Вывод:** [конкретное действие или оценка]
 
 **СЕПАРАЦИЯ (разделение зубов):**
 - Тип: [аккуратная/топорная/минимальная/отсутствует]
 - Апроксимальные поверхности (боковые стороны): [описание]
 - Характеризация (покраска) контактных точек: [есть/нет]
 - Вывод: [конкретно что делать]
+**Вывод:** [конкретное действие или оценка]
 
 **СИММЕТРИЯ И ГАРМОНИЯ:**
 - Сравнение зубов: [с градацией — конкретные отличия]
@@ -131,10 +136,12 @@ def analyze_with_claude(img_array, target_shade, notes, work_stage, analysis_typ
 - Режущие края: [уровень + естественность]
 - Сравнение с родными зубами: [гармония по цвету/форме/текстуре]
 - Итог симметрии: [градация из правила 2]
+**Вывод:** [конкретное действие или оценка]
 
 **СОСТОЯНИЕ ДЕСНЫ:**
 [только то что реально видно — воспаление/рецессия/треугольники/цвет]
 [если не видна — "Десна не видна на фото, оценить невозможно"]
+**Вывод:** [конкретное действие или оценка]
 
 **ИТОГОВАЯ ОЦЕНКА:**
 [уровень из шкалы + % проблем + общий вердикт]
@@ -200,15 +207,7 @@ def show_page():
     st.title("🎨 Анализ работы")
     st.info("Загрузи фото работы — разберём форму, оттенок, градиент зон и что с этим делать.")
 
-    # Кнопка сброса
-    if st.button("🗑️ Очистить и начать заново"):
-        for key in ["color_img", "color_result", "color_chat"]:
-            if key in st.session_state:
-                del st.session_state[key]
-        st.rerun()
-
-    st.divider()
-
+    
     st.markdown("""
     <style>
     /* Убираем красный hover на кнопках загрузки */
@@ -234,6 +233,38 @@ def show_page():
     }
     </style>
     """, unsafe_allow_html=True)
+
+    st.subheader("Моя работа — какие зубы?")
+    st.caption("Отметь зубы которые ты делал (верхняя челюсть)")
+    
+    upper_teeth = ["18","17","16","15","14","13","12","11",
+                   "21","22","23","24","25","26","27","28"]
+    lower_teeth = ["48","47","46","45","44","43","42","41",
+                   "31","32","33","34","35","36","37","38"]
+    
+    col_upper = st.columns(16)
+    selected_upper = []
+    for i, tooth in enumerate(upper_teeth):
+        with col_upper[i]:
+            if st.checkbox(tooth, key=f"u_{tooth}"):
+                selected_upper.append(tooth)
+    
+    st.caption("Нижняя челюсть")
+    col_lower = st.columns(16)
+    selected_lower = []
+    for i, tooth in enumerate(lower_teeth):
+        with col_lower[i]:
+            if st.checkbox(tooth, key=f"l_{tooth}"):
+                selected_lower.append(tooth)
+    
+    all_selected = selected_upper + selected_lower
+    if all_selected:
+        st.info(f"Твоя работа: {', '.join(all_selected)}")
+        st.session_state["selected_teeth"] = all_selected
+    else:
+        st.session_state["selected_teeth"] = []
+    
+    st.divider()
 
     col1, col2 = st.columns(2)
 
@@ -323,9 +354,14 @@ def show_page():
                                 st.session_state["color_img"]
                             ).convert("RGB")
                         )
+                        teeth_info = ""
+                        if st.session_state.get("selected_teeth"):
+                            teeth_info = f"Работа техника: зубы {', '.join(st.session_state['selected_teeth'])}. "
+                        
                         result = analyze_with_claude(
                             img_array, target_shade,
-                            notes, work_stage, 
+                            teeth_info + notes, 
+                            work_stage,
                             analysis_type, api_key
                         )
                         st.session_state["color_result"] = result
@@ -397,3 +433,12 @@ def show_page():
                             st.rerun()
                     except Exception as e:
                         st.error(f"Ошибка: {str(e)}")
+
+    if st.session_state.get("color_result"):
+        st.divider()
+        if st.button("🗑️ Очистить и начать заново"):
+            for key in ["color_img", "color_result", 
+                       "color_chat", "selected_teeth"]:
+                if key in st.session_state:
+                    del st.session_state[key]
+            st.rerun()

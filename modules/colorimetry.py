@@ -165,7 +165,7 @@ def analyze_with_claude(img_array, target_shade, notes, work_stage, analysis_typ
     }
     payload = {
         "model": "claude-opus-4-5",
-        "max_tokens": 1500,
+        "max_tokens": 3000,
         "messages": [
             {
                 "role": "user",

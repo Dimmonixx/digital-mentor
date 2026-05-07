@@ -172,7 +172,7 @@ def analyze_with_claude(img_array, target_shade, notes, work_stage, analysis_typ
     }
     payload = {
         "model": "claude-opus-4-5",
-        "max_tokens": 3000,
+        "max_tokens": 2000,
         "messages": [
             {
                 "role": "user",
@@ -234,38 +234,7 @@ def show_page():
     </style>
     """, unsafe_allow_html=True)
 
-    st.subheader("Моя работа — какие зубы?")
-    st.caption("Отметь зубы которые ты делал (верхняя челюсть)")
     
-    upper_teeth = ["18","17","16","15","14","13","12","11",
-                   "21","22","23","24","25","26","27","28"]
-    lower_teeth = ["48","47","46","45","44","43","42","41",
-                   "31","32","33","34","35","36","37","38"]
-    
-    col_upper = st.columns(16)
-    selected_upper = []
-    for i, tooth in enumerate(upper_teeth):
-        with col_upper[i]:
-            if st.checkbox(tooth, key=f"u_{tooth}"):
-                selected_upper.append(tooth)
-    
-    st.caption("Нижняя челюсть")
-    col_lower = st.columns(16)
-    selected_lower = []
-    for i, tooth in enumerate(lower_teeth):
-        with col_lower[i]:
-            if st.checkbox(tooth, key=f"l_{tooth}"):
-                selected_lower.append(tooth)
-    
-    all_selected = selected_upper + selected_lower
-    if all_selected:
-        st.info(f"Твоя работа: {', '.join(all_selected)}")
-        st.session_state["selected_teeth"] = all_selected
-    else:
-        st.session_state["selected_teeth"] = []
-    
-    st.divider()
-
     col1, col2 = st.columns(2)
 
     with col1:
@@ -337,6 +306,37 @@ def show_page():
             ],
             key="analysis_type"
         )
+        st.markdown("**Моя работа — зубы:**")
+            upper_teeth = ["18","17","16","15","14","13","12","11",
+                           "21","22","23","24","25","26","27","28"]
+            lower_teeth = ["48","47","46","45","44","43","42","41",
+                           "31","32","33","34","35","36","37","38"]
+            
+            st.caption("Верхняя челюсть")
+            cols_u = st.columns(16)
+            selected_upper = []
+            for i, tooth in enumerate(upper_teeth):
+                with cols_u[i]:
+                    if st.checkbox(tooth, key=f"u_{tooth}", 
+                                   label_visibility="visible"):
+                        selected_upper.append(tooth)
+            
+            st.caption("Нижняя челюсть")
+            cols_l = st.columns(16)
+            selected_lower = []
+            for i, tooth in enumerate(lower_teeth):
+                with cols_l[i]:
+                    if st.checkbox(tooth, key=f"l_{tooth}",
+                                   label_visibility="visible"):
+                        selected_lower.append(tooth)
+            
+            all_selected = selected_upper + selected_lower
+            if all_selected:
+                st.caption(f"Выбрано: {', '.join(all_selected)}")
+                st.session_state["selected_teeth"] = all_selected
+            else:
+                st.session_state["selected_teeth"] = []
+            
         notes = st.text_area(
             "Комментарий к работе (необязательно)",
             placeholder="Например: 2 центральных резца, пациент 35 лет, блич BL1...",

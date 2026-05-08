@@ -1,5 +1,5 @@
 import streamlit as st
-from modules import photo_engineer, anatomy, settings, chat, colorimetry
+from modules import photo_engineer, anatomy, settings, chat, colorimetry, techcard
 
 st.set_page_config(page_title="Цифровой Наставник", layout="wide")
 
@@ -103,9 +103,8 @@ elif st.session_state["page"] == "🔍 Детекция дефектов":
 elif page == "🎨 Анализ работы":
     colorimetry.show_page()
 
-elif st.session_state["page"] == "📋 Тех-карта":
-    st.title("📋 Тех-карта")
-    st.info("Раздел в разработке — скоро здесь появится функционал")
+elif page == "📋 Тех-карта":
+    techcard.show_page()
 
 elif st.session_state["page"] == "🔬 Морфология":
     st.title("🔬 Морфология")

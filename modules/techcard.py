@@ -10,10 +10,13 @@ def image_to_base64(img):
     img.save(buffer, format="JPEG", quality=90)
     return base64.b64encode(buffer.getvalue()).decode("utf-8")
 
-def analyze_reference(img, api_key):
+def analyze_reference(img, api_key, tooth_ref=""):
     img_base64 = image_to_base64(img)
     
-    prompt = """Ты опытный зубной техник. Анализируй референсный зуб на фото.
+    tooth_text = f"Анализируй зуб {tooth_ref}." if tooth_ref else ""
+    
+    prompt = f"""Ты опытный зубной техник. {tooth_text}
+Анализируй ТОЛЬКО указанный зуб как референс.
 
 ВАЖНО ПРО ОРИЕНТАЦИЮ:
 - Зуб стоит ВЕРТИКАЛЬНО
@@ -83,23 +86,51 @@ def parse_reference_analysis(text):
         "features": ""
     }
     
-    # Сохраняем сырой ответ для отладки
     st.session_state["ref_raw"] = text
     
-    import re
+    # Ищем по ключевым словам в каждой строке
+    current_key = None
+    current_lines = []
     
-    patterns = {
-        "cervical": r"ЦЕРВИКАЛЬНАЯ_ЗОНА:\s*(.+?)(?=\n[А-Я_]+:|$)",
-        "middle": r"СРЕДНЯЯ_ЗОНА:\s*(.+?)(?=\n[А-Я_]+:|$)",
-        "incisal": r"РЕЖУЩИЙ_КРАЙ:\s*(.+?)(?=\n[А-Я_]+:|$)",
-        "texture": r"ТЕКСТУРА:\s*(.+?)(?=\n[А-Я_]+:|$)",
-        "features": r"ОСОБЕННОСТИ:\s*(.+?)(?=\n[А-Я_]+:|$)"
+    key_map = {
+        "ЦЕРВИКАЛЬНАЯ_ЗОНА": "cervical",
+        "СРЕДНЯЯ_ЗОНА": "middle", 
+        "РЕЖУЩИЙ_КРАЙ": "incisal",
+        "ТЕКСТУРА": "texture",
+        "ОСОБЕННОСТИ": "features"
     }
     
-    for key, pattern in patterns.items():
-        match = re.search(pattern, text, re.DOTALL)
-        if match:
-            result[key] = match.group(1).strip()
+    lines = text.split("\n")
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        
+        found_key = False
+        for kw, field in key_map.items():
+            if kw in line:
+                if current_key and current_lines:
+                    result[current_key] = " ".join(current_lines).strip()
+                current_key = field
+                # Берём текст после двоеточия если есть
+                parts = line.split(":", 1)
+                if len(parts) > 1 and parts[1].strip():
+                    current_lines = [parts[1].strip()]
+                else:
+                    current_lines = []
+                found_key = True
+                break
+        
+        if not found_key and current_key:
+            current_lines.append(line)
+    
+    # Последний блок
+    if current_key and current_lines:
+        result[current_key] = " ".join(current_lines).strip()
+    
+    # Если всё пустое — кладём весь текст в особенности
+    if not any(result.values()):
+        result["features"] = text
     
     return result
 
@@ -249,7 +280,12 @@ def show_page():
 
     with col1:
         st.subheader("📷 Фото референсного зуба")
-        st.caption("Шейка — внизу, режущий край — вверху")
+        ref_tooth = st.text_input(
+            "Какой зуб анализируем как референс?",
+            placeholder="Например: 21, или 12, или правый центральный",
+            key="ref_tooth_input"
+        )
+        st.caption("Шейка зуба — у десны (обычно снизу фото)")
         
         ref_file = st.camera_input("Сфотографировать", key="cam_ref")
         if not ref_file:
@@ -297,7 +333,8 @@ def show_page():
                     with st.spinner("Анализирую референсный зуб..."):
                         try:
                             analysis_text = analyze_reference(
-                                img_pil, api_key
+                                img_pil, api_key,
+                                st.session_state.get("ref_tooth_input", "")
                             )
                             parsed = parse_reference_analysis(
                                 analysis_text

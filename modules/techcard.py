@@ -82,18 +82,25 @@ def parse_reference_analysis(text):
         "texture": "",
         "features": ""
     }
-    lines = text.split("\n")
-    for line in lines:
-        if "ЦЕРВИКАЛЬНАЯ_ЗОНА:" in line:
-            result["cervical"] = line.split("ЦЕРВИКАЛЬНАЯ_ЗОНА:")[-1].strip()
-        elif "СРЕДНЯЯ_ЗОНА:" in line:
-            result["middle"] = line.split("СРЕДНЯЯ_ЗОНА:")[-1].strip()
-        elif "РЕЖУЩИЙ_КРАЙ:" in line:
-            result["incisal"] = line.split("РЕЖУЩИЙ_КРАЙ:")[-1].strip()
-        elif "ТЕКСТУРА:" in line:
-            result["texture"] = line.split("ТЕКСТУРА:")[-1].strip()
-        elif "ОСОБЕННОСТИ:" in line:
-            result["features"] = line.split("ОСОБЕННОСТИ:")[-1].strip()
+    
+    # Сохраняем сырой ответ для отладки
+    st.session_state["ref_raw"] = text
+    
+    import re
+    
+    patterns = {
+        "cervical": r"ЦЕРВИКАЛЬНАЯ_ЗОНА:\s*(.+?)(?=\n[А-Я_]+:|$)",
+        "middle": r"СРЕДНЯЯ_ЗОНА:\s*(.+?)(?=\n[А-Я_]+:|$)",
+        "incisal": r"РЕЖУЩИЙ_КРАЙ:\s*(.+?)(?=\n[А-Я_]+:|$)",
+        "texture": r"ТЕКСТУРА:\s*(.+?)(?=\n[А-Я_]+:|$)",
+        "features": r"ОСОБЕННОСТИ:\s*(.+?)(?=\n[А-Я_]+:|$)"
+    }
+    
+    for key, pattern in patterns.items():
+        match = re.search(pattern, text, re.DOTALL)
+        if match:
+            result[key] = match.group(1).strip()
+    
     return result
 
 def generate_techcard(data, api_key, ref_image=None):
@@ -301,6 +308,15 @@ def show_page():
                             st.session_state["ref_texture"] = parsed["texture"]
                             st.session_state["ref_features"] = parsed["features"]
                             st.success("Поля заполнены автоматически!")
+                            
+                            # Показываем сырой ответ если поля пустые
+                            if not any([
+                                parsed["cervical"], 
+                                parsed["middle"]
+                            ]):
+                                st.warning("Не удалось распарсить. Сырой ответ:")
+                                st.text(analysis_text)
+                            
                             st.rerun()
                         except Exception as e:
                             st.error(f"Ошибка: {str(e)}")

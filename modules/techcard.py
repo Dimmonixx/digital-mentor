@@ -413,40 +413,32 @@ def show_page():
             "Цервикальная зона (шейка)",
             value=st.session_state.get("ref_cervical", ""),
             placeholder="Например: тёплое дентиновое ядро A3...",
-            height=100,
-            key="tc_cervical"
+            height=100
         )
         middle = st.text_area(
             "Средняя зона (тело)",
             value=st.session_state.get("ref_middle", ""),
             placeholder="Например: дентин сужается к центру...",
-            height=100,
-            key="tc_middle"
+            height=100
         )
-
-    with col4:
         incisal = st.text_area(
             "Режущий край",
             value=st.session_state.get("ref_incisal", ""),
             placeholder="Например: умеренная прозрачность 15-20%...",
-            height=100,
-            key="tc_incisal"
+            height=100
         )
         texture = st.text_area(
             "Текстура поверхности",
             value=st.session_state.get("ref_texture", ""),
             placeholder="Например: перикиматы сглажены...",
-            height=100,
-            key="tc_texture"
+            height=100
         )
-
-    features = st.text_area(
-        "Особенности и дополнения",
-        value=st.session_state.get("ref_features", ""),
-        placeholder="Трещины, белые пятна...",
-        height=80,
-        key="tc_features"
-    )
+        features = st.text_area(
+            "Особенности и дополнения",
+            value=st.session_state.get("ref_features", ""),
+            placeholder="Трещины, белые пятна...",
+            height=80
+        )
 
     st.divider()
 

@@ -339,12 +339,12 @@ def show_page():
                             parsed = parse_reference_analysis(
                                 analysis_text
                             )
-                          st.session_state["ref_cervical"] = parsed["cervical"]
-                            st.session_state["ref_middle"] = parsed["middle"]
-                            st.session_state["ref_incisal"] = parsed["incisal"]
-                            st.session_state["ref_texture"] = parsed["texture"]
-                            st.session_state["ref_features"] = parsed["features"]
-                            st.session_state["ref_analyzed"] = True
+                        st.session_state["ref_cervical"] = parsed["cervical"]
+                        st.session_state["ref_middle"] = parsed["middle"]
+                        st.session_state["ref_incisal"] = parsed["incisal"]
+                        st.session_state["ref_texture"] = parsed["texture"]
+                        st.session_state["ref_features"] = parsed["features"]
+                        st.session_state["ref_analyzed"] = True
                             
                             if any([parsed["cervical"], parsed["middle"]]):
                                 st.success("Поля заполнены! Прокрути вниз.")

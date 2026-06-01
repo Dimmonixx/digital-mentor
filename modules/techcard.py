@@ -50,7 +50,7 @@ def analyze_reference(img, api_key, tooth_ref=""):
         "content-type": "application/json"
     }
     payload = {
-        "model": "claude-opus-4-5",
+        "model": "claude-3-5-sonnet-20241022",
         "max_tokens": 800,
         "messages": [{
             "role": "user",
@@ -250,7 +250,7 @@ def generate_techcard(data, api_key, ref_image=None):
         "content-type": "application/json"
     }
     payload = {
-        "model": "claude-opus-4-5",
+        "model": "claude-3-5-sonnet-20241022",
         "max_tokens": 2000,
         "messages": [{"role": "user", "content": content}]
     }

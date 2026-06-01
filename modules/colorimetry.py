@@ -137,7 +137,7 @@ def analyze_with_claude(img_array, target_shade, notes, work_stage, analysis_typ
         "content-type": "application/json"
     }
     payload = {
-        "model": "claude-opus-4-5",
+        "model": "claude-3-5-sonnet-20241022",
         "max_tokens": 2000,
         "messages": [
             {
@@ -368,7 +368,7 @@ def show_page():
                             "content-type": "application/json"
                         }
                         payload = {
-                            "model": "claude-opus-4-5",
+                            "model": "claude-3-5-sonnet-20241022",
                             "max_tokens": 512,
                             "messages": [
                                 {
